@@ -3,3 +3,5 @@ test_data/
 test_images/
 test_videos/
 *.pyc
+*.pth
+ff_frames/

@@ -1,15 +1,15 @@
 import numpy as np
 from PIL import Image
 
-def compute_spectrum_feature(image_path, patch=None, eps=1e-8):
+def compute_spectrum_feature(image, patch=None, eps=1e-8):
     """
     Compute the frequency-domain blur feature f3 = sum(log(J(omega))),
     where J(omega) is the angle-averaged power spectrum at radius omega.
 
     Parameters
     ----------
-    image_path : str
-        Path to the input image.
+    image : str or PIL.Image.Image
+        Path to the input image or a PIL Image object.
     patch : tuple or None
         If given, a 4-tuple (x, y, w, h) specifying a sub-window. Otherwise use full image.
     eps : float
@@ -21,7 +21,16 @@ def compute_spectrum_feature(image_path, patch=None, eps=1e-8):
         f3 = sum(log(J(omega))) across all non-zero radial frequencies.
     """
     # 1) Load & optionally crop to patch, convert to grayscale float array
-    img = np.array(Image.open(image_path).convert('L'), dtype=float)
+    if isinstance(image, str):
+        img = Image.open(image)
+    else:
+        img = image
+
+    if img.mode == "RGBA":  # Handle PNG with transparency
+        img = img.convert("RGB")
+    img = img.convert('L')  # Convert to grayscale
+    img = np.array(img, dtype=float)
+
     if patch is not None:
         x, y, w, h = patch
         img = img[y:y+h, x:x+w]

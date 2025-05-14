@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
 
 class GaussianNB(nn.Module):
     def __init__(self, n_features, n_classes):
@@ -63,34 +62,3 @@ class GaussianNB(nn.Module):
         """Return normalized probabilities P(y|X)."""
         log_probs = self.forward(X)
         return torch.exp(log_probs - log_probs.logsumexp(dim=1, keepdim=True))
-
-# --- Example usage ---
-
-# 1) Prepare data
-# X_train: torch.Tensor of shape (N_train, D)
-# y_train: torch.LongTensor of shape (N_train,)
-# X_test:  torch.Tensor of shape (N_test, D)
-# y_test:  torch.LongTensor of shape (N_test,)
-
-train_ds = TensorDataset(X_train, y_train)
-train_loader = DataLoader(train_ds, batch_size=256, shuffle=True)
-
-# 2) Instantiate and fit
-model = GaussianNB(n_features=X_train.shape[1], n_classes=num_classes)
-# We’ll accumulate all data (no true minibatch needed for closed-form)
-all_X = []
-all_y = []
-for Xb, yb in train_loader:
-    all_X.append(Xb)
-    all_y.append(yb)
-all_X = torch.cat(all_X, dim=0)
-all_y = torch.cat(all_y, dim=0)
-model.fit(all_X, all_y)
-
-# 3) Evaluate
-y_pred = model.predict(X_test)
-accuracy = (y_pred == y_test).float().mean().item()
-print(f"Test accuracy: {accuracy*100:.2f}%")
-
-# 4) Get probabilities
-probs = model.predict_proba(X_test)  # shape (N_test, num_classes)

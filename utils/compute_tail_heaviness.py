@@ -3,7 +3,7 @@ from PIL import Image
 from sklearn.mixture import GaussianMixture
 from scipy import ndimage
 
-def compute_tail_heaviness(image_path, use_sobel=True):
+def compute_tail_heaviness(image, use_sobel=True):
     """
     Compute the 'tail-heaviness' feature f2 = sigma1 from a 2-component
     GMM fit to the gradient magnitudes, where sigma1 is the larger of the
@@ -11,8 +11,8 @@ def compute_tail_heaviness(image_path, use_sobel=True):
 
     Parameters:
     -----------
-    image_path : str
-        Path to input image.
+    image : str or PIL.Image.Image
+        Path to input image or a PIL Image object.
     use_sobel : bool, default=True
         If True, compute gradients with Sobel filters; otherwise use central differences.
 
@@ -22,7 +22,10 @@ def compute_tail_heaviness(image_path, use_sobel=True):
         tail-heaviness feature (sigma1).
     """
     # --- 1) Load & grayscale ---
-    img = np.array(Image.open(image_path).convert('L'), dtype=float)
+    if isinstance(image, str):
+        img = np.array(Image.open(image).convert('L'), dtype=float)
+    else:
+        img = np.array(image.convert('L'), dtype=float)
 
     # --- 2) Compute gradients ---
     if use_sobel:

@@ -186,3 +186,22 @@ output_video = "/media/peseyes/output/blur5_test.mp4"
 block_size = 128
 blur_threshold = 0.7
 process_video_with_regions(input_video, output_video, regions, block_size, blur_threshold)
+
+def predict(image, threshold=0.1):
+    # Convert PIL Image to numpy array
+    region = np.array(image)
+    gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+    f = np.fft.fft2(gray)
+    fshift = np.fft.fftshift(f)
+    magnitude_spectrum = np.abs(fshift)
+
+    sorted_magnitude = np.sort(magnitude_spectrum.flatten())
+    cutoff_index = int(len(sorted_magnitude) * 0.9)
+    cutoff_value = sorted_magnitude[cutoff_index]
+
+    magnitude_spectrum[magnitude_spectrum > cutoff_value] = 0
+
+    high_freq_ratio = np.sum(magnitude_spectrum > 100) / magnitude_spectrum.size
+
+    is_blurry = high_freq_ratio < threshold
+    return "blur" if is_blurry else "clear"
