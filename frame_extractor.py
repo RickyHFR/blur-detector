@@ -1,7 +1,6 @@
-import subprocess
-import os
 from collections import namedtuple
-from PIL import Image
+from fractions import Fraction
+import av
 
 # Tuples defined for storing regions to be cropped
 Region = namedtuple("Region", ["xmin", "ymin", "xmax", "ymax"])
@@ -131,53 +130,60 @@ chimney_regions = {
     ]
 }
 
-# Function to extract frames from a video using ffmpeg
-def ffmpeg_extract_interval(video_path, output_dir, interval_sec=1.0, fmt="jpg"):
+# Function to extract frames from a video
+def ffmpeg_extract_interval(video_path, interval_sec=1.0):
     """
-    Uses ffmpeg to extract frames at a fixed rate.
+    Extract frames from a video at a fixed interval and return them as in-memory objects.
 
     :param video_path: Path to MP4 video.
-    :param output_dir: Directory where frames will go.
     :param interval_sec: Seconds between each output frame.
-    :param fmt: Image format (jpg/png).
+    :return: List of PIL.Image objects representing the frames.
     """
-    os.makedirs(output_dir, exist_ok=True)
+    container = av.open(video_path)
+    stream = container.streams.video[0]
+    tb = stream.time_base
 
-    # -vf fps=1/interval: one frame every `interval_sec` seconds
-    cmd = [
-        "ffmpeg",
-        "-i", video_path,
-        "-vf", f"fps=1/{interval_sec}",
-        "-q:v", "2",                            # quality for JPEG (1–31, lower = better)
-        os.path.join(output_dir, f"frame_%04d.{fmt}")
-    ]
-    subprocess.run(cmd, check=True)
-    print(f"ffmpeg extraction complete into '{output_dir}'")
+    # How many pts‐units correspond to interval_sec?
+    # interval_sec / time_base  => Fraction
+    pts_per_interval = int((Fraction(interval_sec) / tb).limit_denominator())
 
-def crop_chimney_regions(image, regions):
+    frames = []
+    next_pts = 0
+
+    for frame in container.decode(stream):
+        # frame.pts is in units of tb
+        if frame.pts is None:
+            continue
+        if frame.pts >= next_pts:
+            frames.append(frame.to_image())
+            next_pts += pts_per_interval
+
+    return frames
+
+def crop_chimney_regions(image, camera_id):
     """
     image       : PIL image
-    regions : list of Region(xmin, ymin, xmax, ymax)
+    camera_id   : ID of the camera
 
     Returns:
         list of cropped patches
     """
     result = []
+    regions = chimney_regions.get(camera_id, [])
+    # Check if the camera_id is valid
+    if not regions:
+        raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: {list(chimney_regions.keys())}")
     for region in regions:
         xmin, ymin, xmax, ymax = region
         patch = image.crop((xmin, ymin, xmax, ymax))  # Use the crop method
         result.append(patch)
     return result
 
-# Example usage:
-# ffmpeg_extract_interval("test_videos/test_vid1.mp4", "./ff_frames", interval_sec=0.5)
-image = Image.open("test_images/image_sources/tb4/high.jpeg")
-result = crop_chimney_regions(image, chimney_regions["tb4"])
-for i, patch in enumerate(result):
-    patch.save(f"test_images/image_sources/tb4/high_quality_patch_{i}.jpeg")
-    print(f"Saved patch {i} with size {patch.size}")
-
-
+# # Example usage:
+# frames = ffmpeg_extract_interval("test_videos/test_vid1.mp4", interval_sec=0.5)
+# for i, frame in enumerate(frames):
+#     # display each frame
+#     frame.show(title=f"Frame {i+1}")
 
 # chimney_regions = {
 #     "smk1": [
