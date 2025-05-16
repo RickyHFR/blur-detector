@@ -5,3 +5,4 @@ test_videos/
 *.pyc
 *.pth
 ff_frames/
+test_vid_in_progress/
