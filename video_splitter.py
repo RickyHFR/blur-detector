@@ -1,4 +1,5 @@
 import ffmpeg
+import os
 
 def extract_segment(input_path, start_time, duration_sec, output_path):
     """
@@ -15,9 +16,22 @@ def extract_segment(input_path, start_time, duration_sec, output_path):
     )
 
 if __name__ == "__main__":
+    input_path = 'test_vid_in_progress/00010003296000000.mp4'
+    start_time = '00:01'
+    duration_sec = 10
+    base_output = 'test_vid_in_progress/clear/tb2_Mar_1_'
+    ext = '.mp4'
+
+    num = 1
+    while True:
+        output_path = f"{base_output}{num}{ext}"
+        if not os.path.exists(output_path):
+            break
+        num += 1
+
     extract_segment(
-        input_path='test_vid_in_progress/00000003573000000.mp4',
-        start_time='01:32:52',
-        duration_sec=10,
-        output_path='test_vid_in_progress/clear/tb1_Jan_31_2.mp4'
+        input_path=input_path,
+        start_time=start_time,
+        duration_sec=duration_sec,
+        output_path=output_path
     )
