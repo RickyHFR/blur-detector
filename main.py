@@ -1,27 +1,31 @@
 import os
 from blur_detector import blur_detector, extract_camera_id
-from frame_extractor import ffmpeg_extract_interval
-import matplotlib.pyplot as plt
-import numpy as np
 from blur_detector_for_debug import inspect_video
 
 def evaluate_folder(folder_path, expected_label, interval_sec=1.0):
+    import sys
     total = 0
     correct = 0
-    for filename in os.listdir(folder_path):
-        if not filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
-            continue
+    video_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv'))]
+    n_files = len(video_files)
+    for idx, filename in enumerate(video_files):
         video_path = os.path.join(folder_path, filename)
         camera_id = extract_camera_id(video_path)
-        print(f"Evaluating: {video_path}")
         is_blur = blur_detector(video_path, camera_id, interval_sec)
         pred_label = 'blur' if is_blur else 'clear'
-        print(f"Predicted: {pred_label}, Ground Truth: {expected_label}")
         if pred_label == expected_label:
             correct += 1
         else:
+            print(f"\nIncorrect: {filename} | Predicted: {pred_label}, Ground Truth: {expected_label}")
             inspect_video(video_path)
         total += 1
+        # Progress bar
+        bar_len = 40
+        filled_len = int(round(bar_len * (idx + 1) / n_files))
+        bar = '=' * filled_len + '-' * (bar_len - filled_len)
+        sys.stdout.write(f'\r[{bar}] {idx + 1}/{n_files}')
+        sys.stdout.flush()
+    print()  # Newline after progress bar
     accuracy = correct / total if total > 0 else 0
     print(f"Accuracy for {expected_label} folder: {accuracy:.2%} ({correct}/{total})\n")
     return accuracy

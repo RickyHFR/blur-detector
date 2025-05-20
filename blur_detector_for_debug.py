@@ -24,12 +24,12 @@ def inspect_video(video_path):
     # show all cropped regions
     for i, frame in enumerate(cropped_regions):
         plt.imshow(frame)
-        plt.title(f"Region {i+1}" + f" (Detector Result: {internal_blur_engine(frame)})")
+        plt.title(f"Region {i}" + f" (Detector Result: {internal_blur_engine(frame)})")
         plt.axis('off')
         plt.show()
 
-    print(f"Overall Detector Result: {blur_detector(video_path, camera_id)}")
+    # print(f"Overall Detector Result: {blur_detector(video_path, camera_id, chimney_num=0)}")
 
 if __name__ == "__main__":
-    video_path = "test_vid_in_progress/blur/ad3_Mar_6_3.mp4"
+    video_path = "test_vid_in_progress/blur/ad1_Feb_5_1.mp4"
     inspect_video(video_path)
