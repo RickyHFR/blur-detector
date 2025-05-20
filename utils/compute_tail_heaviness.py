@@ -28,7 +28,7 @@ def compute_tail_heaviness(image, use_sobel=True):
         img = np.array(image.convert('L'), dtype=float)
 
     # Filter out pixels that are at least 50% brighter than average and replace with the average value
-    avg = np.mean(img)
+    avg = np.median(img)
     bright_mask = img >= (1.5 * avg)
     img[bright_mask] = avg
 
@@ -53,11 +53,3 @@ def compute_tail_heaviness(image, use_sobel=True):
 
     return sigma1
 
-# Example:
-if __name__ == "__main__":
-    path = "test_data/blur.jpg"
-    tail_heaviness = compute_tail_heaviness(path)
-    print(f"Tail-heaviness (σ₁): {tail_heaviness:.4f}")
-    path = "test_data/clear.jpg"
-    tail_heaviness = compute_tail_heaviness(path)
-    print(f"Tail-heaviness (σ₁): {tail_heaviness:.4f}")
