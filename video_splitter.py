@@ -16,10 +16,10 @@ def extract_segment(input_path, start_time, duration_sec, output_path):
     )
 
 if __name__ == "__main__":
-    input_path = 'test_vid_in_progress/00010003296000000.mp4'
-    start_time = '00:01'
+    input_path = 'test_vid_in_progress/00000001571000000.mp4'
+    start_time = '01:55:55'
     duration_sec = 10
-    base_output = 'test_vid_in_progress/clear/tb2_Mar_1_'
+    base_output = 'test_vid_in_progress/intermediate/tb1_Mar_1_'
     ext = '.mp4'
 
     num = 1

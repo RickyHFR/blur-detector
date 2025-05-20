@@ -27,6 +27,11 @@ def compute_tail_heaviness(image, use_sobel=True):
     else:
         img = np.array(image.convert('L'), dtype=float)
 
+    # Filter out pixels that are at least 50% brighter than average and replace with the average value
+    avg = np.mean(img)
+    bright_mask = img >= (1.5 * avg)
+    img[bright_mask] = avg
+
     # --- 2) Compute gradients ---
     if use_sobel:
         Gx = ndimage.sobel(img, axis=1)

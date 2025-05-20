@@ -45,7 +45,7 @@ def blur_detector(video_path, camera_id, interval_sec = 1.0):
                 score += 1
     return score > 0.5 * len(cropped_regions) * len(cropped_regions[0])
 
-# def internal_blur_engine(image, threshold=0.1):
+# def internal_blur_engine(image, threshold=0.2):
 #     """
 #     Detect blurriness in an image using FFT and a threshold.
 
@@ -74,12 +74,12 @@ def blur_detector(video_path, camera_id, interval_sec = 1.0):
 #     is_blurry = high_freq_ratio < threshold
 #     return "blur" if is_blurry else "clear"
 
-def internal_blur_engine(image, threshold=20):
+def internal_blur_engine(image, threshold=30):
     """
     Detect blurriness in an image using Gaussian Mixture Model (GMM) and a threshold.
     Parameters
     ----------
-    image : np.ndarray
+    image : np.ndarray or PIL.Image.Image
         The input image to be analyzed.
     threshold : float
         The threshold for determining blurriness.

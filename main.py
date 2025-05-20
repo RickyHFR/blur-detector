@@ -3,6 +3,7 @@ from blur_detector import blur_detector, extract_camera_id
 from frame_extractor import ffmpeg_extract_interval
 import matplotlib.pyplot as plt
 import numpy as np
+from blur_detector_for_debug import inspect_video
 
 def evaluate_folder(folder_path, expected_label, interval_sec=1.0):
     total = 0
@@ -18,15 +19,8 @@ def evaluate_folder(folder_path, expected_label, interval_sec=1.0):
         print(f"Predicted: {pred_label}, Ground Truth: {expected_label}")
         if pred_label == expected_label:
             correct += 1
-        # else:
-        #     # Display the first frame of the wrongly predicted video
-        #     frames = ffmpeg_extract_interval(video_path, interval_sec)
-        #     if frames:
-        #         frame_np = np.array(frames[0])
-        #         plt.imshow(frame_np)
-        #         plt.title(f"Wrong Prediction: {filename}\nPredicted: {pred_label}, GT: {expected_label}")
-        #         plt.axis('off')
-        #         plt.show()
+        else:
+            inspect_video(video_path)
         total += 1
     accuracy = correct / total if total > 0 else 0
     print(f"Accuracy for {expected_label} folder: {accuracy:.2%} ({correct}/{total})\n")
