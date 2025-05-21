@@ -56,8 +56,8 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, chimney_num=-1):
     focused_total = 0
     other_total = 0
 
-    # threshold = 30 if camera_id != 'ad4' else 5
-    threshold = 1.5
+    threshold = 30 if camera_id != 'ad4' else 5
+    # threshold = 1.5
 
     for frame_idx in range(len(frames)):
         for region_idx, region in enumerate(cropped_regions[frame_idx]):
@@ -131,17 +131,17 @@ def internal_blur_engine(image, threshold=30):
     zoom1 = zoom_into_point(image, zoom_factor=1.5, center=zoom_point)
     zoom2 = zoom_into_point(image, zoom_factor=2.0, center=zoom_point)
 
-    # sigma1 = compute_tail_heaviness(pil_image)
-    # sigma2 = compute_tail_heaviness(zoom1)
-    # sigma3 = compute_tail_heaviness(zoom2)
+    sigma1 = compute_tail_heaviness(pil_image)
+    sigma2 = compute_tail_heaviness(zoom1)
+    sigma3 = compute_tail_heaviness(zoom2)
 
     # sigma1 = compute_spectrum_feature(pil_image)
     # sigma2 = compute_spectrum_feature(zoom1)
     # sigma3 = compute_spectrum_feature(zoom2)
 
-    sigma1 = compute_kurtosis_score(pil_image)
-    sigma2 = compute_kurtosis_score(zoom1)
-    sigma3 = compute_kurtosis_score(zoom2)
+    # sigma1 = compute_kurtosis_score(pil_image)
+    # sigma2 = compute_kurtosis_score(zoom1)
+    # sigma3 = compute_kurtosis_score(zoom2)
     is_blurry = np.mean([sigma1, sigma2, sigma3]) < threshold
 
     # Display the original and zoomed images after computing tail heaviness
