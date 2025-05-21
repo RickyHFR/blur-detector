@@ -22,14 +22,18 @@ def inspect_video(video_path):
     cropped_regions = crop_chimney_regions(first_frame, camera_id)
 
     # show all cropped regions
-    for i, frame in enumerate(cropped_regions):
-        plt.imshow(frame)
-        plt.title(f"Region {i}" + f" (Detector Result: {internal_blur_engine(frame)})")
-        plt.axis('off')
-        plt.show()
+    # for i, frame in enumerate(cropped_regions):
+    #     # plt.imshow(frame)
+    #     # plt.title(f"Region {i}" + f" (Detector Result: {internal_blur_engine(frame)})")
+    #     # plt.axis('off')
+    #     # plt.show()
+    #     internal_blur_engine(frame)
 
-    # print(f"Overall Detector Result: {blur_detector(video_path, camera_id, chimney_num=0)}")
+    print(f"Overall Detector Result: {blur_detector(video_path, camera_id, interval_sec=10.0, chimney_num=-1)}")
 
 if __name__ == "__main__":
-    video_path = "test_vid_in_progress/blur/ad1_Feb_5_1.mp4"
+    video_path = "test_vid_in_progress/blur/tb2_Feb_22_2.mp4"
+    if not os.path.exists(video_path):
+        raise FileNotFoundError(f"Video file not found: {video_path}")
     inspect_video(video_path)
+

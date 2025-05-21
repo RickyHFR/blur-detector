@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 from PIL import Image
 from frame_extractor import ffmpeg_extract_interval, crop_chimney_regions
-from utils.compute_tail_heaviness import compute_tail_heaviness
+from utils.compute_power_spectrum import compute_spectrum_feature
+from utils.compute_tail_heaviness import compute_tail_heaviness, zoom_into_point
+from utils.compute_directional_kurtosis import compute_kurtosis_score
 
 def extract_camera_id(video_path):
     """
@@ -38,6 +40,7 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, chimney_num=-1):
     """
 
     frames = ffmpeg_extract_interval(video_path, interval_sec)
+    # print(f"Extracted {len(frames)} frames from the video.")
     cropped_regions = [crop_chimney_regions(frame, camera_id) for frame in frames]
     if len(frames) == 0:
         raise ValueError("No frames extracted from the video.")
@@ -53,17 +56,20 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, chimney_num=-1):
     focused_total = 0
     other_total = 0
 
+    # threshold = 30 if camera_id != 'ad4' else 5
+    threshold = 1.5
+
     for frame_idx in range(len(frames)):
         for region_idx, region in enumerate(cropped_regions[frame_idx]):
             if camera_id == 'ad1' and (region_idx == 0 or region_idx == 1): # special case for ad1
                 continue
             if region_idx == chimney_num:
                 focused_total += 1
-                if internal_blur_engine(region) == "blur":
+                if internal_blur_engine(region, threshold) == "blur":
                     focused_count += 1
             else:
                 other_total += 1
-                if internal_blur_engine(region) == "blur":
+                if internal_blur_engine(region, threshold) == "blur":
                     other_count += 1
     if focused_total == 0 and other_total != 0:
         return other_count / other_total * 100 > 50
@@ -112,14 +118,47 @@ def internal_blur_engine(image, threshold=30):
         The input image to be analyzed.
     threshold : float
         The threshold for determining blurriness.
-        Default is 20.
+        Default is 30.
     """
+    import matplotlib.pyplot as plt
     if isinstance(image, np.ndarray):
         pil_image = Image.fromarray(image)
     else:
         pil_image = image
 
-    tail_heaviness = compute_tail_heaviness(pil_image, use_sobel=True)
-    is_blurry = tail_heaviness < threshold
+    zoom_point = (pil_image.width // 2, int(pil_image.height * 0.1))
+
+    zoom1 = zoom_into_point(image, zoom_factor=1.5, center=zoom_point)
+    zoom2 = zoom_into_point(image, zoom_factor=2.0, center=zoom_point)
+
+    # sigma1 = compute_tail_heaviness(pil_image)
+    # sigma2 = compute_tail_heaviness(zoom1)
+    # sigma3 = compute_tail_heaviness(zoom2)
+
+    # sigma1 = compute_spectrum_feature(pil_image)
+    # sigma2 = compute_spectrum_feature(zoom1)
+    # sigma3 = compute_spectrum_feature(zoom2)
+
+    sigma1 = compute_kurtosis_score(pil_image)
+    sigma2 = compute_kurtosis_score(zoom1)
+    sigma3 = compute_kurtosis_score(zoom2)
+    is_blurry = np.mean([sigma1, sigma2, sigma3]) < threshold
+
+    # Display the original and zoomed images after computing tail heaviness
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 3, 1)
+    plt.imshow(pil_image)
+    plt.title(f'Original\nσ={sigma1:.2f}')
+    plt.axis('off')
+    plt.subplot(1, 3, 2)
+    plt.imshow(zoom1)
+    plt.title(f'Zoom 1.5x\nσ={sigma2:.2f}')
+    plt.axis('off')
+    plt.subplot(1, 3, 3)
+    plt.imshow(zoom2)
+    plt.title(f'Zoom 2.0x\nσ={sigma3:.2f}')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
 
     return "blur" if is_blurry else "clear"

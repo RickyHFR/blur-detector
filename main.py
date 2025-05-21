@@ -2,7 +2,7 @@ import os
 from blur_detector import blur_detector, extract_camera_id
 from blur_detector_for_debug import inspect_video
 
-def evaluate_folder(folder_path, expected_label, interval_sec=1.0):
+def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
     import sys
     total = 0
     correct = 0
@@ -17,7 +17,7 @@ def evaluate_folder(folder_path, expected_label, interval_sec=1.0):
             correct += 1
         else:
             print(f"\nIncorrect: {filename} | Predicted: {pred_label}, Ground Truth: {expected_label}")
-            inspect_video(video_path)
+            # inspect_video(video_path)
         total += 1
         # Progress bar
         bar_len = 40
