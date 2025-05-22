@@ -21,7 +21,10 @@ def extract_camera_id(video_path):
         The camera ID extracted from the video path.
     """
     # Assuming the camera ID is the first part of the filename before an underscore
-    return video_path.split('/')[-1].split('_')[0]
+    cam_id = video_path.split('/')[-1].split('_')[0]
+    if cam_id.startswith('adm'):
+        cam_id = 'ad' + cam_id[3:]
+    return cam_id
 
 def blur_detector(video_path, camera_id, interval_sec=1.0, chimney_num=-1):
     """
@@ -129,7 +132,7 @@ def internal_blur_engine(image, threshold=30):
     zoom_point = (pil_image.width // 2, int(pil_image.height * 0.1))
 
     zoom1 = zoom_into_point(image, zoom_factor=1.5, center=zoom_point)
-    zoom2 = zoom_into_point(image, zoom_factor=2.0, center=zoom_point)
+    zoom2 = zoom_into_point(image, zoom_factor=3.0, center=zoom_point)
 
     sigma1 = compute_tail_heaviness(pil_image)
     sigma2 = compute_tail_heaviness(zoom1)

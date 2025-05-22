@@ -3,7 +3,6 @@ from frame_extractor import ffmpeg_extract_interval, crop_chimney_regions
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from PIL import Image
 
 def inspect_video(video_path):
     """
