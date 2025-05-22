@@ -64,8 +64,6 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, chimney_num=-1):
 
     for frame_idx in range(len(frames)):
         for region_idx, region in enumerate(cropped_regions[frame_idx]):
-            if camera_id == 'ad1' and (region_idx == 0 or region_idx == 1): # special case for ad1
-                continue
             if region_idx == chimney_num:
                 focused_total += 1
                 if internal_blur_engine(region, threshold) == "blur":
