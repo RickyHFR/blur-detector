@@ -4,21 +4,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def inspect_video(video_path):
-    """
-    Inspect a video by displaying its frames at specified intervals.
-    
-    Parameters
-    ----------
-    video_path : str
-        Path to the input video file.
-    interval_sec : float
-        Seconds between each output frame.
-    """
+def inspect_video(video_path, region_id, camera_id=None):
     frames = ffmpeg_extract_interval(video_path)
     first_frame = frames[0]
-    camera_id = extract_camera_id(video_path)
+    if camera_id is None:
+        camera_id = extract_camera_id(video_path)
     cropped_regions = crop_chimney_regions(first_frame, camera_id)
+    region = cropped_regions[region_id]
+    # show the cropped region
+    plt.imshow(region)
+    plt.title(f"Region {region_id} | Detector Result: {internal_blur_engine(region)}")
+    plt.axis('off')
+    plt.show()
 
     # show all cropped regions
     # for i, frame in enumerate(cropped_regions):
@@ -28,11 +25,12 @@ def inspect_video(video_path):
     #     # plt.show()
     #     internal_blur_engine(frame)
 
-    print(f"Overall Detector Result: {blur_detector(video_path, camera_id, interval_sec=10.0, chimney_num=-1)}")
+    # print(f"Overall Detector Result: {blur_detector(video_path, camera_id, interval_sec=10.0, chimney_num=-1)}")
 
 if __name__ == "__main__":
-    video_path = "test_vid_in_progress/clear/jtc2_Feb_22_2.mp4"
+    # video_path = "test_videos/smoke_start_c10_2025-05-19_151606.mp4"
+    video_path = "test_vid_in_progress/clear/tb2_Mar_6_2.mp4"
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
-    inspect_video(video_path)
+    inspect_video(video_path, region_id=9, camera_id='tb2')
 

@@ -127,14 +127,14 @@ def internal_blur_engine(image, threshold=30):
     else:
         pil_image = image
 
-    zoom_point = (pil_image.width // 2, int(pil_image.height * 0.1))
+    # zoom_point = (pil_image.width // 2, int(pil_image.height * 0.1))
 
-    zoom1 = zoom_into_point(image, zoom_factor=1.5, center=zoom_point)
-    zoom2 = zoom_into_point(image, zoom_factor=3.0, center=zoom_point)
+    # zoom1 = zoom_into_point(image, zoom_factor=1.5, center=zoom_point)
+    # zoom2 = zoom_into_point(image, zoom_factor=3.0, center=zoom_point)
 
     sigma1 = compute_tail_heaviness(pil_image)
-    sigma2 = compute_tail_heaviness(zoom1)
-    sigma3 = compute_tail_heaviness(zoom2)
+    # sigma2 = compute_tail_heaviness(zoom1)
+    # sigma3 = compute_tail_heaviness(zoom2)
 
     # sigma1 = compute_spectrum_feature(pil_image)
     # sigma2 = compute_spectrum_feature(zoom1)
@@ -143,23 +143,23 @@ def internal_blur_engine(image, threshold=30):
     # sigma1 = compute_kurtosis_score(pil_image)
     # sigma2 = compute_kurtosis_score(zoom1)
     # sigma3 = compute_kurtosis_score(zoom2)
-    is_blurry = np.mean([sigma1, sigma2, sigma3]) < threshold
+    is_blurry = sigma1 < threshold
 
     # Display the original and zoomed images after computing tail heaviness
-    plt.figure(figsize=(12, 4))
-    plt.subplot(1, 3, 1)
-    plt.imshow(pil_image)
-    plt.title(f'Original\nσ={sigma1:.2f}')
-    plt.axis('off')
-    plt.subplot(1, 3, 2)
-    plt.imshow(zoom1)
-    plt.title(f'Zoom 1.5x\nσ={sigma2:.2f}')
-    plt.axis('off')
-    plt.subplot(1, 3, 3)
-    plt.imshow(zoom2)
-    plt.title(f'Zoom 2.0x\nσ={sigma3:.2f}')
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    # plt.figure(figsize=(12, 4))
+    # plt.subplot(1, 3, 1)
+    # plt.imshow(pil_image)
+    # plt.title(f'Original\nσ={sigma1:.2f}')
+    # plt.axis('off')
+    # plt.subplot(1, 3, 2)
+    # plt.imshow(zoom1)
+    # plt.title(f'Zoom 1.5x\nσ={sigma2:.2f}')
+    # plt.axis('off')
+    # plt.subplot(1, 3, 3)
+    # plt.imshow(zoom2)
+    # plt.title(f'Zoom 2.0x\nσ={sigma3:.2f}')
+    # plt.axis('off')
+    # plt.tight_layout()
+    # plt.show()
 
     return "blur" if is_blurry else "clear"
