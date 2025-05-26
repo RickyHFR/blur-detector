@@ -25,7 +25,7 @@ def extract_camera_id(video_path):
         cam_id = 'ad' + cam_id[3:]
     return cam_id
 
-def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=20):
+def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=20, save_detected_dir=None):
     """
     Determine if a video is blurry and return a boolean value.
     
@@ -52,11 +52,33 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=20):
 
     for frame_idx in range(len(frames)):
         for region_idx, region in enumerate(cropped_regions[frame_idx]):
-            total += compute_tail_heaviness(region, use_sobel=True)
+            score = compute_tail_heaviness(region, use_sobel=True)
+            total += score
             count += 1
-    if total == 0:
+    if count == 0:
         raise ValueError("No regions to analyze for blurriness.")
     avg_tail_heaviness = total / count
+
+    # Save the entire first frame with avg_tail_heaviness in the filename if requested
+    if save_detected_dir is not None:
+        import os
+        os.makedirs(save_detected_dir, exist_ok=True)
+        from PIL import Image
+        base_name = os.path.splitext(os.path.basename(video_path))[0]
+        out_name = f"{base_name}_score_{avg_tail_heaviness:.2f}.jpg"
+        out_path = os.path.join(save_detected_dir, out_name)
+        frame0 = frames[0]
+        if isinstance(frame0, np.ndarray):
+            img_to_save = Image.fromarray(frame0)
+        else:
+            img_to_save = frame0
+        img_to_save.save(out_path)
+
+    # plt.figure(figsize=(12, 8))  # Enlarged figure size
+    # plt.imshow(frames[0])
+    # plt.title(f'Camera ID: {camera_id} | Avg Tail Heaviness: {avg_tail_heaviness:.2f}')
+    # plt.axis('off')
+    # plt.show()
     return avg_tail_heaviness < threshold
 
 # def internal_blur_engine(image, threshold=0.2):
@@ -106,12 +128,12 @@ def internal_blur_engine(image):
     
     result = compute_tail_heaviness(pil_image, use_sobel=True)
 
-    # Display the original and zoomed images after computing tail heaviness
-    plt.figure(figsize=(12, 4))
-    plt.imshow(pil_image)
-    plt.title(f'Original\nσ={result:.2f}')
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    # # Display the original and zoomed images after computing tail heaviness
+    # plt.figure(figsize=(12, 4))
+    # plt.imshow(pil_image)
+    # plt.title(f'Original\nσ={result:.2f}')
+    # plt.axis('off')
+    # plt.tight_layout()
+    # plt.show()
 
     return result

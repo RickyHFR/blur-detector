@@ -27,17 +27,17 @@ def compute_tail_heaviness(image, use_sobel=True):
     else:
         img = np.array(image.convert('L'), dtype=float)
 
-    # Stronger bright point removal using multiple methods
-    # Method 1: Percentile-based clipping to remove extreme outliers
-    upper_threshold = np.percentile(img, 98)  # Remove top 2% brightest pixels
-    img = np.clip(img, 0, upper_threshold)
+    # # Stronger bright point removal using multiple methods
+    # # Method 1: Percentile-based clipping to remove extreme outliers
+    # upper_threshold = np.percentile(img, 98)  # Remove top 2% brightest pixels
+    # img = np.clip(img, 0, upper_threshold)
     
-    # Method 2: MAD-based outlier detection for remaining bright spots
-    median = np.median(img)
-    mad = np.median(np.abs(img - median))
-    threshold = median + 3 * mad  # More robust than standard deviation
-    bright_mask = img > threshold
-    img[bright_mask] = threshold
+    # # Method 2: MAD-based outlier detection for remaining bright spots
+    # median = np.median(img)
+    # mad = np.median(np.abs(img - median))
+    # threshold = median + 3 * mad  # More robust than standard deviation
+    # bright_mask = img > threshold
+    # img[bright_mask] = threshold
 
     # --- 2) Compute gradients ---
     if use_sobel:
