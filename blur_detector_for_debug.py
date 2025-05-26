@@ -28,9 +28,9 @@ def inspect_video(video_path, region_id, camera_id=None):
     # print(f"Overall Detector Result: {blur_detector(video_path, camera_id, interval_sec=10.0, chimney_num=-1)}")
 
 if __name__ == "__main__":
-    # video_path = "test_videos/smoke_start_c10_2025-05-19_151606.mp4"
-    video_path = "test_vid_in_progress/clear/tb2_Mar_6_2.mp4"
+    # video_path = "test_videos/smoke_start_c1_2025-05-26_070813.mp4"
+    video_path = "test_vid_in_progress/clear/tb4_Feb_22_2.mp4"
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
-    inspect_video(video_path, region_id=9, camera_id='tb2')
+    inspect_video(video_path, region_id=1, camera_id='tb4')
 
