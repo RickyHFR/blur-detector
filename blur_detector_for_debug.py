@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+
 def inspect_video(video_path, region_id, camera_id=None):
     frames = ffmpeg_extract_interval(video_path)
-    first_frame = frames[0]
+    first_frame = frames[1]
     # show the first frame
     plt.imshow(first_frame)
     plt.title("First Frame")
@@ -35,8 +36,8 @@ def inspect_video(video_path, region_id, camera_id=None):
 
 if __name__ == "__main__":
     # video_path = "test_videos/smoke_start_c1_2025-05-23_083859.mp4"
-    video_path = "test_vid_in_progress/clear/jtc2_Jan_19_3 copy.mp4"
+    video_path = "test_vid_in_progress/blur/ad3_Mar_6_3.mp4"
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
-    inspect_video(video_path, region_id=1, camera_id='jtc2')
+    inspect_video(video_path, region_id=1, camera_id='ad3')
 

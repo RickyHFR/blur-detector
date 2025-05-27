@@ -51,8 +51,12 @@ def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=20, save_de
     total = 0
 
     for frame_idx in range(len(frames)):
-        for region_idx, region in enumerate(cropped_regions[frame_idx]):
+        for region in cropped_regions[frame_idx]:
             score = compute_tail_heaviness(region, use_sobel=True)
+            # plt.imshow(region)
+            # plt.title(f'Camera ID: {camera_id} | Frame {frame_idx} | Region {count} | Tail Heaviness: {score:.2f}')
+            # plt.axis('off')
+            # plt.show()
             total += score
             count += 1
     if count == 0:
@@ -128,12 +132,12 @@ def internal_blur_engine(image):
     
     result = compute_tail_heaviness(pil_image, use_sobel=True)
 
-    # # Display the original and zoomed images after computing tail heaviness
-    # plt.figure(figsize=(12, 4))
-    # plt.imshow(pil_image)
-    # plt.title(f'Original\nσ={result:.2f}')
-    # plt.axis('off')
-    # plt.tight_layout()
-    # plt.show()
+    # Display the original and zoomed images after computing tail heaviness
+    plt.figure(figsize=(12, 4))
+    plt.imshow(pil_image)
+    plt.title(f'σ={result:.2f}')
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
 
     return result

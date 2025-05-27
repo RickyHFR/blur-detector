@@ -11,6 +11,7 @@ def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
         video_path = os.path.join(folder_path, filename)
         camera_id = extract_camera_id(video_path)
         is_blur = blur_detector(video_path, camera_id, interval_sec, save_detected_dir='test_vid_in_progress/results')
+        # is_blur = blur_detector(video_path, camera_id, interval_sec)
         pred_label = 'blur' if is_blur else 'clear'
         if pred_label == expected_label:
             correct += 1
