@@ -36,10 +36,10 @@ def eval_image_folder(image_folder):
         total_tail_heaviness = 0
         for idx, region in enumerate(cropped_regions):
             tail_heaviness = compute_tail_heaviness(region, use_sobel=True)
-            plt.imshow(region)
-            plt.title(f"{image_name} | Region {idx} | Tail Heaviness: {tail_heaviness}")
-            plt.axis('off')
-            plt.show()
+            # plt.imshow(region)
+            # plt.title(f"{image_name} | Region {idx} | Tail Heaviness: {tail_heaviness}")
+            # plt.axis('off')
+            # plt.show()
             total_tail_heaviness += tail_heaviness
         count += 1
         avg_tail_heaviness = total_tail_heaviness / len(cropped_regions) if cropped_regions else 0
@@ -53,7 +53,7 @@ def eval_image_folder(image_folder):
         for name, path in wrong_predictions:
             print(f"{name} | Path: {path}")
         # Always clear the wrongly_predicted_images directory before saving new results
-        output_dir = "wrongly_predicted_images"
+        output_dir = "wrongly_predicted_images_blur_can_see"
         if os.path.exists(output_dir):
             for f in os.listdir(output_dir):
                 file_path = os.path.join(output_dir, f)
@@ -70,7 +70,7 @@ def eval_image_folder(image_folder):
                 img.save(os.path.join(output_dir, name))
     
 if __name__ == "__main__":
-    # image_folder = "NEA_data/blur_can_see"
-    image_folder = "wrongly_predicted_images"
+    image_folder = "NEA_data/blur_can_see"
+    # image_folder = "wrongly_predicted_images"
     eval_image_folder(image_folder)
 

@@ -28,21 +28,10 @@ def compute_tail_heaviness(image, use_sobel=True):
     else:
         img = np.array(image.convert('L'), dtype=float)
 
-    # img = np.zeros(img.shape)  # Ensure the image is in float format
-
-    # Display brightness histogram
-    plt.figure(figsize=(6, 3))
-    plt.hist(img.flatten(), bins=50, color='gray', alpha=0.7)
-    plt.title("Brightness Histogram")
-    plt.xlabel("Pixel Intensity")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    plt.show()
-
-    plt.imshow(img, cmap='gray')
-    plt.title("Grayscale Image")
-    plt.axis('off')
-    plt.show()
+    # plt.imshow(img, cmap='gray')
+    # plt.title("Grayscale Image")
+    # plt.axis('off')
+    # plt.show()
 
     # Stronger bright point removal using multiple methods
     # Method 1: Percentile-based clipping to remove extreme outliers
@@ -50,18 +39,10 @@ def compute_tail_heaviness(image, use_sobel=True):
     # print(f"Upper threshold for clipping: {upper_threshold}")
     img = np.clip(img, 0, upper_threshold)
 
-    plt.figure(figsize=(6, 3))
-    plt.hist(img.flatten(), bins=50, color='gray', alpha=0.7)
-    plt.title("Brightness Histogram")
-    plt.xlabel("Pixel Intensity")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    plt.show()
-
-    plt.imshow(img, cmap='gray', vmin=0, vmax=255)
-    plt.title("Clipped Image")
-    plt.axis('off')
-    plt.show()
+    # plt.imshow(img, cmap='gray', vmin=0, vmax=255)
+    # plt.title("Clipped Image")
+    # plt.axis('off')
+    # plt.show()
     
     # # Method 2: MAD-based outlier detection for remaining bright spots
     # median = np.median(img)
