@@ -36,8 +36,8 @@ def inspect_video(video_path, region_id, camera_id=None):
 
 if __name__ == "__main__":
     # video_path = "test_videos/smoke_start_c1_2025-05-23_083859.mp4"
-    video_path = "test_vid_in_progress/blur/ad3_Mar_6_3.mp4"
+    video_path = "NEA_data/wrongly_predicted_images_blur_night/tb2_0_pred_clear.mp4"
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
-    inspect_video(video_path, region_id=1, camera_id='ad3')
+    inspect_video(video_path, region_id=1, camera_id='tb2')
 

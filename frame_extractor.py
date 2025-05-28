@@ -1,6 +1,7 @@
 from collections import namedtuple
 from fractions import Fraction
 import av
+from PIL import ImageDraw
 
 # Tuples defined for storing regions to be cropped
 Region = namedtuple("Region", ["xmin", "ymin", "xmax", "ymax"])
@@ -97,7 +98,7 @@ chimney_regions = {
     "tb2": [
         Region(123 - 17, 690, 220, 790),
         Region(301 - 17, 690, 429 - 17, 785),
-        Region(400, 450, 529, 570),
+        Region(400, 450, 495, 570),
         Region(515, 410, 643, 510),
         # Region(0, 0, 0, 0),
         Region(700, 570, 831, 670),
@@ -179,3 +180,22 @@ def crop_chimney_regions(image, camera_id):
         patch = image.crop((xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height))  # Use the crop method
         result.append(patch)
     return result
+
+def label_regions(image, camera_id):
+    """
+    Label the regions in the image based on the camera_id.
+
+    :param image: PIL image
+    :param camera_id: ID of the camera
+    :return: List of labeled regions
+    """
+    width, height = image.size
+    regions = chimney_regions.get(camera_id, [])
+    if not regions:
+        raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: {list(chimney_regions.keys())}")
+    for region in regions:
+        xmin, ymin, xmax, ymax = region
+        # Draw rectangle around the region
+        draw = ImageDraw.Draw(image)
+        draw.rectangle([xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height], outline="red", width=2)
+    return image

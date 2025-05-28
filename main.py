@@ -1,4 +1,5 @@
 import os
+import gc
 from blur_detector import blur_detector, extract_camera_id
 
 def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
@@ -25,6 +26,9 @@ def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
         bar = '=' * filled_len + '-' * (bar_len - filled_len)
         sys.stdout.write(f'\r[{bar}] {idx + 1}/{n_files}')
         sys.stdout.flush()
+        # Free memory after each video
+        del video_path, camera_id, is_blur, pred_label
+        gc.collect()
     print()  # Newline after progress bar
     accuracy = correct / total if total > 0 else 0
     print(f"Accuracy for {expected_label} folder: {accuracy:.2%} ({correct}/{total})\n")

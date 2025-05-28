@@ -28,29 +28,6 @@ def compute_tail_heaviness(image, use_sobel=True):
     else:
         img = np.array(image.convert('L'), dtype=float)
 
-    # plt.imshow(img, cmap='gray')
-    # plt.title("Grayscale Image")
-    # plt.axis('off')
-    # plt.show()
-
-    # Stronger bright point removal using multiple methods
-    # Method 1: Percentile-based clipping to remove extreme outliers
-    upper_threshold = np.percentile(img, 95)  # Remove top 5% brightest pixels
-    # print(f"Upper threshold for clipping: {upper_threshold}")
-    img = np.clip(img, 0, upper_threshold)
-
-    # plt.imshow(img, cmap='gray', vmin=0, vmax=255)
-    # plt.title("Clipped Image")
-    # plt.axis('off')
-    # plt.show()
-    
-    # # Method 2: MAD-based outlier detection for remaining bright spots
-    # median = np.median(img)
-    # mad = np.median(np.abs(img - median))
-    # threshold = median + 3 * mad  # More robust than standard deviation
-    # bright_mask = img > threshold
-    # img[bright_mask] = threshold
-
     # --- 2) Compute gradients ---
     if use_sobel:
         Gx = ndimage.sobel(img, axis=1)
@@ -61,9 +38,12 @@ def compute_tail_heaviness(image, use_sobel=True):
     # --- 3) Gradient magnitude and flatten ---
     G = np.sqrt(Gx**2 + Gy**2).reshape(-1, 1)
 
+    grad_thresh = np.percentile(G, 98)
+    gradient_magnitude_masked = np.where(G < grad_thresh, G, 0)
+
     # --- 4) Fit 2-component GMM to gradient magnitudes ---
     gmm = GaussianMixture(n_components=2, covariance_type='diag', random_state=0)
-    gmm.fit(G)
+    gmm.fit(gradient_magnitude_masked)
 
     # --- 5) Extract standard deviations and pick the larger ---
     # gmm.covariances_ is shape (2, 1) for diag covariances

@@ -25,7 +25,7 @@ def extract_camera_id(video_path):
         cam_id = 'ad' + cam_id[3:]
     return cam_id
 
-def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=20, save_detected_dir=None):
+def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=10, save_detected_dir=None):
     """
     Determine if a video is blurry and return a boolean value.
     
