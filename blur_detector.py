@@ -132,12 +132,12 @@ def internal_blur_engine(image):
     
     result = compute_tail_heaviness(pil_image, use_sobel=True)
 
-    # Display the original and zoomed images after computing tail heaviness
-    plt.figure(figsize=(12, 4))
-    plt.imshow(pil_image)
-    plt.title(f'σ={result:.2f}')
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    # # Display the original and zoomed images after computing tail heaviness
+    # plt.figure(figsize=(12, 4))
+    # plt.imshow(pil_image)
+    # plt.title(f'σ={result:.2f}')
+    # plt.axis('off')
+    # plt.tight_layout()
+    # plt.show()
 
     return result

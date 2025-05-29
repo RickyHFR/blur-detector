@@ -1,7 +1,7 @@
 from collections import namedtuple
 from fractions import Fraction
 import av
-from PIL import ImageDraw
+from PIL import ImageDraw, ImageFont
 
 # Tuples defined for storing regions to be cropped
 Region = namedtuple("Region", ["xmin", "ymin", "xmax", "ymax"])
@@ -66,7 +66,7 @@ chimney_regions = {
         # Region(0, 0, 0, 0),
         Region(1052, 530, 1180, 590),
         Region(1532 + 30, 510, 1660 - 10, 600),
-        Region(1700, 520, 1801 - 30, 600),
+        # Region(1700, 520, 1801 - 30, 600),
         Region(1724 - 2 + 30, 470, 1852 - 20, 560)
     ],
     "jtc3": [
@@ -181,21 +181,52 @@ def crop_chimney_regions(image, camera_id):
         result.append(patch)
     return result
 
-def label_regions(image, camera_id):
+def label_regions(image, camera_id, scores=None, threshold=10.0):
     """
     Label the regions in the image based on the camera_id.
 
     :param image: PIL image
     :param camera_id: ID of the camera
-    :return: List of labeled regions
+    :param scores: List of scores for each region (optional)
+    :param threshold: Threshold for prediction
+    :return: Labeled image
     """
     width, height = image.size
     regions = chimney_regions.get(camera_id, [])
     if not regions:
         raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: {list(chimney_regions.keys())}")
-    for region in regions:
+    draw = ImageDraw.Draw(image)
+    try:
+        font_bottom = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Use a common large font on Linux
+        font_score = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)  # Smaller font for scores
+    except Exception as e:
+        print(f"Warning: Could not load DejaVuSans-Bold.ttf, using default font. Text may be small. ({e})")
+        font_bottom = ImageFont.load_default()
+        font_score = ImageFont.load_default()
+    # Define a list of colors to cycle through for boxes and scores
+    box_colors = [
+        "red", "green", "blue", "orange", "purple", "magenta", "cyan", "lime", "yellow", "aqua", "fuchsia", "teal"
+    ]
+    for idx, region in enumerate(regions):
         xmin, ymin, xmax, ymax = region
         # Draw rectangle around the region
-        draw = ImageDraw.Draw(image)
-        draw.rectangle([xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height], outline="red", width=2)
-    return image
+        box = [xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height]
+        color = box_colors[idx % len(box_colors)]
+        draw.rectangle(box, outline=color, width=2)
+        # Draw score if provided
+        if scores is not None and idx < len(scores):
+            score_text = f"{scores[idx]:.2f}"
+            text_x = box[0]
+            text_y = box[1] - 10 - font_score.size
+            if text_y < 0:
+                text_y = 0
+            draw.text((text_x, text_y), score_text, fill=color, font=font_score)
+    # Draw average score and prediction at the bottom
+    avg_score = sum(scores) / len(scores) if scores else 0
+    pred = 'blur' if avg_score < threshold else 'clear'
+    bottom_text = f"Avg: {avg_score:.2f} | Pred: {pred} | Threshold: {threshold:.2f} | Camera ID: {camera_id}"
+    text_width, text_height = draw.textsize(bottom_text, font=font_bottom)
+    bottom_x = (width - text_width) // 2
+    bottom_y = height - text_height - 10
+    draw.text((bottom_x, bottom_y), bottom_text, fill="cyan", font=font_bottom)
+    return image, pred
