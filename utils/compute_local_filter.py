@@ -1,1 +1,0 @@
-# Placeholder for the compute_local_filter function

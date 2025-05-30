@@ -89,10 +89,10 @@ def eval_folder(image_folder, camera_id=None, threshold = 10.0, save_anotated_di
 
     
 if __name__ == "__main__":
-    folder = "test_vid_in_progress/enlarged_images/clear_ad4_png"
+    folder = "test_vid_in_progress/clear"
     target_folder = folder + "/annotated"
     if not os.path.exists(folder):
         print(f"Folder {folder} does not exist.")
         exit(1)
-    eval_folder(folder, camera_id='ad4', threshold=1.0, save_anotated_dir=target_folder, ground_truth="clear")
+    eval_folder(folder, camera_id=None, threshold=10.0, save_anotated_dir=target_folder, ground_truth="clear")
 

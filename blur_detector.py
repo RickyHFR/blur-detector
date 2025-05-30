@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 from frame_extractor import ffmpeg_extract_interval, crop_chimney_regions
-from utils.compute_tail_heaviness import compute_tail_heaviness
+from compute_tail_heaviness import compute_tail_heaviness
 
 def extract_camera_id(video_path):
     """
