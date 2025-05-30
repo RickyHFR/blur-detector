@@ -1,137 +1,138 @@
 from collections import namedtuple
 from fractions import Fraction
 import av
+from PIL import ImageDraw, ImageFont
 
 # Tuples defined for storing regions to be cropped
 Region = namedtuple("Region", ["xmin", "ymin", "xmax", "ymax"])
 
 chimney_regions = {
     "smk1": [
-        Region(593 , 621 , 721  , 749 ),
-        Region(739  , 578 , (803 + 64)  , 706 ),
-        Region((722 + 54)  , 752 , (850 + 54)  , 880 ),
-        Region((874 + 64)  , 730 , (1002 + 64)  , 858 ),
-        Region((896 + 64)  , 605 , (1024 + 64)  , 733 ),
-        Region((941 + 66)  , 634 , (1069 + 66)  , 762 ),
-        Region((1179 + 54)  , 597 , (1307 + 54)  , 725 )
+        Region(593 , 621 - 56 , 721  , 749 - 56 ),
+        Region(739, 578 - 57, 803 + 64  , 706 - 57 ),
+        Region(722 + 104  , 752 , 850 + 54 - 30, 880 - 80),
+        # Region(0, 0, 0, 0),
+        Region(896 + 84  , 605 - 40, 1024 + 44  , 733 - 80 ),
+        # Region(0, 0, 0, 0),
+        Region(1179 + 54  , 557 , 1307 + 54  , 725 - 80)
     ],
     "smk2": [
-        Region((392 + 74)  , (492 + 25) , (520 + 74)  , (620 + 25) ),
-        Region((439 + 74)  , (602 + 25) , (567 + 74)  , (730 + 25) ),
-        Region((451 + 74)  , (601 + 25) , (579 + 74)  , (729 + 25) ),
-        Region((663 + 74)  , (563 + 25) , (791 + 74)  , (691 + 25) ),
-        Region((718 + 84)  , (591 + 25) , (846 + 84)  , (719 + 25) ),
-        Region((742 + 79)  , (675 + 22) , (870 + 79)  , (803 + 22) ),
-        Region((848 + 84)  , (666 + 22) , (976 + 84)  , (794 + 22) ),
-        Region((979 + 81)  , (673 + 22) , (1107 + 81)  , (801 + 22) ),
-        Region((1105 + 84)  , (625 + 22) , (1233 + 84)  , (753 + 22) ),
-        Region((1127 + 82)  , (612 + 20) , (1255 + 82)  , (740 + 20) ),
-        Region((1198 + 84)  , (614 + 30) , (1326 + 84)  , (742 + 30) ),
-        Region((1283 + 84)  , (757 + 20) , (1411 + 84)  , (885 + 20) ),
-        Region((1396 + 84)  , (767 + 22) , (1524 + 84)  , (895 + 22) )
+        Region(392 + 74 + 10  , 492 + 25 - 80 , 520 + 74 - 20  , 620 + 25 - 80 ),
+        Region(439 + 74 + 32, 602 + 25 - 40, 567 + 74, 730 + 25 - 90 ),
+        # Region(0, 0, 0, 0),
+        Region(663 + 74  , 563 + 25 - 30 , 791 + 74 - 30  , 635),
+        Region(718 + 109  , 591, 846 + 84 - 45  , 719 + 25 - 90),
+        # Region(0, 0, 0, 0),
+        Region(848 + 84  , 650 , 976 + 54  , 740),
+        Region(979 + 81  , 673 , 1107 + 55  , 801 + 22 - 80 ),
+        Region(1105 + 94  , 600 , 1233 + 74  , 680 ),
+        # Region(0, 0, 0, 0),
+        Region(1198 + 84 + 20  , 614 , 1326 + 54  , 680 ),
+        Region(1283 + 84, 757, 1411 + 54, 885 + 20 - 75),
+        # Region(0, 0, 0, 0)
     ],
     "ad1": [
-        Region((382 + 74)  , 632 , (510 + 74)  , 760 ),
-        Region((452 + 84)  , 635 , (580 + 84)  , 763 ),
-        Region((1096 + 80)  , (574 + 15) , (1224 + 80)  , (702 + 15) )
+        # Region(0, 0, 0, 0),
+        Region(452 + 84  , 635 , 580 + 84  , 700),
+        Region(1096 + 80  , 550 , 1224 + 80  , 640)
     ],
     "ad3": [
-        Region((499 + 30)  , 537 , (627 + 30)  , 665 ),
-        Region((906 + 30)  , 552 , (1034 + 30)  , 680 ),
-        Region((991 + 30)  , 559 , (1119 + 30)  , 687 )
+        Region(499 + 25 + 30  , 490 , 627 + 30  , 605),
+        Region(906 + 30  , 520 , 1034 + 20  , 620 ),
+        Region(991 + 30  , 520 , 1119 + 30  , 687 - 60 )
     ],
     "ad4": [
-        Region((43 + 20)  , (536 - 20) , (171 + 20)  , (664 - 20) ),
-        Region((560 + 20)  , (615 - 20) , (688 + 20)  , (743 - 20) ),
-        Region((659 + 20)  , (607 - 20) , (787 + 20)  , (735 - 20) )
+        # Region(0, 0, 0, 0),
+        Region(560 + 20  , 615 - 100 , 688 + 20  , 680 ),
+        Region(659 + 20  , 607 - 90 , 787 + 20  , 680 )
     ],
     "jtc1": [
-        Region((174 - 30)  , (572 + 25) , (302 - 30)  , (700 + 25) ),
-        Region((553 - 35)  , (367 + 25) , (681 - 35)  , (495 + 25) ),
-        Region((1197 - 35)  , (571 + 25) , (1325 - 35)  , (699 + 25) ),
-        Region((1299 - 40)  , (402 + 10) , (1427 - 40)  , (530 + 10) ),
-        Region((1535 - 25)  , (438 + 10) , (1663 - 25)  , (566 + 10) ),
-        Region((1600 - 35)  , (529 + 25) , (1728 - 35)  , (657 + 25) ),
-        Region((1662 - 40)  , (534 + 25) , (1790 - 40)  , (662 + 25) ),
-        Region((1779 - 20)  , (531 + 25) , (1907 - 20)  , (659 + 25) )
+        Region(174 - 30  , 572 , 302 - 30  , 650 ),
+        Region(553 - 35  , 367 , 681 - 35  , 455 ),
+        # Region(0, 0, 0, 0),
+        Region(1299 - 30  , 402 - 30 , 1427 - 50  , 470 ),
+        Region(1535 - 25  , 420 , 1663 - 25  , 520 ),
+        # Region(0, 0, 0, 0),
+        Region(1662 - 40 + 10  , 510 , 1790 - 40  , 620 ),
+        Region(1779 - 20 + 30  , 531 , 1907 - 70  , 659 )
     ],
     "jtc2": [
-        Region((128 - 5)  , (528 + 10) , (256 - 5)  , (656 + 10) ),
-        Region((275 - 5)  , (622 + 8) , (403 - 5)  , (750 + 8) ),
-        Region((400 - 2)  , (603 + 10) , (528 - 2)  , (731 + 10) ),
-        Region((417 - 2)  , (604 + 10) , (545 - 2)  , (732 + 10) ),
-        Region((577 - 3)  , (630 + 20) , (705 - 3)  , (758 + 20) ),
-        Region((679 - 4)  , (664 + 10) , (807 - 4)  , (792 + 10) ),
-        Region((696 - 2)  , (666 + 10) , (824 - 2)  , (794 + 10) ),
-        Region(1052  , (530 + 10) , 1180  , (658 + 10) ),
-        Region(1532  , (535 + 10) , 1660  , (663 + 10) ),
-        Region(1673  , (540 + 10) , 1801  , (668 + 10) ),
-        Region((1724 - 2)  , (494 + 10) , (1852 - 2)  , (622 + 10) )
+        Region(128 - 5  , 510 , 256 - 5  , 580),
+        Region(275 - 5  , 600 , 403 - 15  , 670),
+        Region(440  , 570 , 508 - 2  , 670),
+        # Region(0, 0, 0, 0),
+        Region(630  , 610 , 660  , 670),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        Region(1052, 530, 1180, 590),
+        Region(1532 + 30, 510, 1660 - 10, 600),
+        # Region(1700, 520, 1801 - 30, 600),
+        Region(1724 - 2 + 30, 470, 1852 - 20, 560)
     ],
     "jtc3": [
-        Region(45  , (577 + 5) , 173  , (705 + 5) ),
-        Region(87  , (690 + 10) , 215  , (818 + 10) ),
-        Region(205  , (724 + 10) , 333  , (852 + 10) ),
-        Region(395  , (583 + 10) , 523  , (711 + 10) ),
-        Region(465  , (746 + 10) , 593  , (874 + 10) ),
-        Region(592  , (651 + 15) , 720  , (779 + 15) ),
-        Region(674  , (674 + 10) , 802  , (802 + 10) ),
-        Region(955  , (677 + 10) , 1083  , (805 + 10) ),
-        Region(1104  , 677 , 1232  , 805 ),
-        Region(1263  , (727 + 10) , 1391  , (855 + 10) ),
-        Region(1655  , (658 + 10) , 1783  , (786 + 10) ),
-        Region(1772  , (542 + 5) , 1900  , (670 + 5) )
+        Region(45  , 530 , 150  , 630 ),
+        Region(117  , 670 , 160  , 750 ),
+        # Region(0, 0, 0, 0),
+        Region(395 + 30 , 550 , 523 - 20  , 650 ),
+        Region(465 + 20 , 700 , 593 - 40  , 790 ),
+        Region(592  , 600 , 720  , 710 ),
+        # Region(0, 0, 0, 0),
+        Region(975  , 650 , 1083  , 740 ),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        Region(1655, 620, 1740, 720),
+        Region(1772, 480, 1850, 600)
     ],
     "jtc4": [
-        Region((189 + 10)  , (534 + 5) , (317 + 10)  , (662 + 5) )
+        Region(230, 500, 300, 590)
     ],
     "tb1": [
-        Region(80  , (487 + 5) , 208  , (615 + 5) ),
-        Region(606  , (737 + 5) , 734  , (865 + 5) ),
-        Region(830  , (733 + 5) , 958  , (861 + 5) ),
-        Region((890 - 3)  , (699 + 5) , (1018 - 3)  , (827 + 5) ),
-        Region(919  , (730 + 5) , 1047  , (858 + 5) ),
-        Region((1033 + 727)  , (855 + 3) , (1161 + 727)  , (855 + 3) ),
-        Region((1219 - 5)  , (736 + 5) , (1347 - 5)  , (864 + 5) )
+        Region(80, 430, 208, 560),
+        Region(606, 700, 734, 810),
+        Region(850, 700, 930, 790),
+        Region(920, 650, 1015, 770),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        Region(1219 - 5, 700, 1347 - 5, 760)
     ],
     "tb2": [
-        Region((123 - 17)  , (719 + 10) , (251 - 17)  , (847 + 10) ),
-        Region((301 - 17)  , (712 + 10) , (429 - 17)  , (840 + 10) ),
-        Region((411 - 10)  , (498 + 10) , (539 - 10)  , (626 + 10) ),
-        Region((525 - 10)  , (440 + 8) , (653 - 10)  , (568 + 8) ),
-        Region((550 - 10)  , (499 + 10) , (678 - 10)  , (627 + 10) ),
-        Region((713 - 10)  , (598 + 10) , (841 - 10)  , (726 + 10) ),
-        Region((1005 - 10)  , (503 + 10) , (1133 - 10)  , (631 + 10) ),
-        Region((1030 - 10)  , (505 + 10) , (1158 - 10)  , (633 + 10) ),
-        Region((1205 - 7)  , (509 + 10) , (1333 - 7)  , (637 + 10) ),
-        Region((1269 - 5)  , (360 + 10) , (1397 - 5)  , (488 + 10) ),
-        Region(1419  , (503 + 10) , 1547  , (631 + 10) ),
-        Region(1671  , (392 + 10) , 1800  , (520 + 10) ),
-        Region(1745  , (221 + 10) , 1873  , (349 + 10) )
+        Region(123 - 17, 690, 220, 790),
+        Region(301 - 17, 690, 429 - 17, 785),
+        Region(400, 450, 495, 570),
+        Region(515, 410, 643, 510),
+        # Region(0, 0, 0, 0),
+        Region(700, 570, 831, 670),
+        Region(995, 450, 1123, 575),
+        # Region(0, 0, 0, 0),
+        Region(1205, 450, 1300, 580),
+        Region(1290, 300, 1400, 430),
+        Region(1419, 450, 1547, 570),
+        Region(1671, 350, 1780, 460),
+        # Region(0, 0, 0, 0)
     ],
     "tb3": [
-        Region((208 - 5)  , 832 , (336 - 5)  , 960 ),
-        Region((365 - 3)  , 824 , (493 - 3)  , 952 ),
-        Region((430 + 15)  , (893 + 20) , (558 + 15)  , (1021 + 20) ),
-        Region((446 + 5)  , 824 , (574 + 5)  , 952 ),
-        Region((525 + 5)  , 521 , (653 + 5)  , 649 ),
-        Region(988  , 836 , 1116  , 964 ),
-        Region(1056  , 836 , 1184  , 964 ),
-        Region((1089 - 5)  , 516 , (1217 - 5)  , 644 ),
-        Region((1546 - 2)  , 514 , (1674 - 2)  , 642 )
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        Region(525 + 5, 470, 653 + 5, 595),
+        # Region(0, 0, 0, 0),
+        # Region(0, 0, 0, 0),
+        Region(1089 - 5, 470, 1217 - 5, 590),
+        Region(1546 - 2, 470, 1674 - 2, 590)
     ],
     "tb4": [
-        Region((61 - 8)  , 774 , (189 - 8)  , 902 ),
-        Region((418 - 20)  , 638 , (546 - 20)  , 766 ),
-        Region((786 - 20)  , (980 + 3) , (914 - 20)  , (1118 + 3) ),
-        Region((995 - 5)  , (979 + 5) , (1123 - 5)  , (1107 + 5) ),
-        Region((1312 - 5)  , (870 + 3) , (1440 - 5)  , (998 + 3) ),
-        Region((1681 - 5)  , (683 + 5) , (1809 - 5)  , (811 + 5) )
+        Region(61 - 8, 730, 189 - 8, 845),
+        Region(418 - 20, 590, 546 - 20, 710),
+        Region(786, 960, 914 - 20, 1045),
+        Region(995 - 5, 950, 1123 - 5, 1045),
+        # Region(0, 0, 0, 0),
+        Region(1681 - 5, 630, 1809 - 5, 755)
     ]
 }
 
 # Function to extract frames from a video
-def ffmpeg_extract_interval(video_path, interval_sec=30.0):
+def ffmpeg_extract_interval(video_path, interval_sec=1.0):
     """
     Extract frames from a video at a fixed interval and return them as in-memory objects.
 
@@ -170,11 +171,62 @@ def crop_chimney_regions(image, camera_id):
     """
     result = []
     regions = chimney_regions.get(camera_id, [])
+    width, height = image.size
     # Check if the camera_id is valid
     if not regions:
         raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: {list(chimney_regions.keys())}")
     for region in regions:
         xmin, ymin, xmax, ymax = region
-        patch = image.crop((xmin, ymin, xmax, ymax))  # Use the crop method
+        patch = image.crop((xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height))  # Use the crop method
         result.append(patch)
     return result
+
+def label_regions(image, camera_id, scores=None, threshold=10.0):
+    """
+    Label the regions in the image based on the camera_id.
+
+    :param image: PIL image
+    :param camera_id: ID of the camera
+    :param scores: List of scores for each region (optional)
+    :param threshold: Threshold for prediction
+    :return: Labeled image
+    """
+    width, height = image.size
+    regions = chimney_regions.get(camera_id, [])
+    if not regions:
+        raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: {list(chimney_regions.keys())}")
+    draw = ImageDraw.Draw(image)
+    try:
+        font_bottom = ImageFont.truetype("DejaVuSans-Bold.ttf", 24)  # Use a common large font on Linux
+        font_score = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)  # Smaller font for scores
+    except Exception as e:
+        print(f"Warning: Could not load DejaVuSans-Bold.ttf, using default font. Text may be small. ({e})")
+        font_bottom = ImageFont.load_default()
+        font_score = ImageFont.load_default()
+    # Define a list of colors to cycle through for boxes and scores
+    box_colors = [
+        "red", "green", "blue", "orange", "purple", "magenta", "cyan", "lime", "yellow", "aqua", "fuchsia", "teal"
+    ]
+    for idx, region in enumerate(regions):
+        xmin, ymin, xmax, ymax = region
+        # Draw rectangle around the region
+        box = [xmin / 1920 * width, ymin / 1080 * height, xmax / 1920 * width, ymax / 1080 * height]
+        color = box_colors[idx % len(box_colors)]
+        draw.rectangle(box, outline=color, width=2)
+        # Draw score if provided
+        if scores is not None and idx < len(scores):
+            score_text = f"{scores[idx]:.2f}"
+            text_x = box[0]
+            text_y = box[1] - 10 - font_score.size
+            if text_y < 0:
+                text_y = 0
+            draw.text((text_x, text_y), score_text, fill=color, font=font_score)
+    # Draw average score and prediction at the bottom
+    avg_score = sum(scores) / len(scores) if scores else 0
+    pred = 'blur' if avg_score < threshold else 'clear'
+    bottom_text = f"Avg: {avg_score:.2f} | Pred: {pred} | Threshold: {threshold:.2f} | Camera ID: {camera_id}"
+    text_width, text_height = draw.textsize(bottom_text, font=font_bottom)
+    bottom_x = (width - text_width) // 2
+    bottom_y = height - text_height - 10
+    draw.text((bottom_x, bottom_y), bottom_text, fill="cyan", font=font_bottom)
+    return image, pred

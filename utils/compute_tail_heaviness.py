@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
 from sklearn.mixture import GaussianMixture
@@ -27,11 +28,6 @@ def compute_tail_heaviness(image, use_sobel=True):
     else:
         img = np.array(image.convert('L'), dtype=float)
 
-    # Filter out pixels that are at least 50% brighter than average and replace with the average value
-    avg = np.median(img)
-    bright_mask = img >= (1.5 * avg)
-    img[bright_mask] = avg
-
     # --- 2) Compute gradients ---
     if use_sobel:
         Gx = ndimage.sobel(img, axis=1)
@@ -42,9 +38,12 @@ def compute_tail_heaviness(image, use_sobel=True):
     # --- 3) Gradient magnitude and flatten ---
     G = np.sqrt(Gx**2 + Gy**2).reshape(-1, 1)
 
+    grad_thresh = np.percentile(G, 98)
+    gradient_magnitude_masked = np.where(G < grad_thresh, G, 0)
+
     # --- 4) Fit 2-component GMM to gradient magnitudes ---
     gmm = GaussianMixture(n_components=2, covariance_type='diag', random_state=0)
-    gmm.fit(G)
+    gmm.fit(gradient_magnitude_masked)
 
     # --- 5) Extract standard deviations and pick the larger ---
     # gmm.covariances_ is shape (2, 1) for diag covariances
@@ -52,33 +51,3 @@ def compute_tail_heaviness(image, use_sobel=True):
     sigma1 = max(sigmas)
 
     return sigma1
-
-def zoom_into_point(image, zoom_factor, center=None):
-    """
-    Zoom in on a specific (x, y) point in the image and resize back to original size.
-
-    Parameters
-    ----------
-    image : PIL.Image
-    zoom_factor : float (>1 for zoom-in)
-    center : tuple (x, y) - the point to zoom in on. Default is center of image.
-
-    Returns
-    -------
-    zoomed PIL.Image
-    """
-    w, h = image.size
-    if center is None:
-        center = (w // 2, h // 2)
-
-    cx, cy = center
-    crop_w = int(w / zoom_factor)
-    crop_h = int(h / zoom_factor)
-
-    left = max(cx - crop_w // 2, 0)
-    top = max(cy - crop_h // 2, 0)
-    right = min(left + crop_w, w)
-    bottom = min(top + crop_h, h)
-
-    cropped = image.crop((left, top, right, bottom))
-    return cropped.resize((w, h), resample=Image.BILINEAR)
