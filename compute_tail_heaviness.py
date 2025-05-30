@@ -7,6 +7,9 @@ from sklearn.mixture import GaussianMixture
 from scipy import ndimage
 
 def get_mask(image):
+    # Ensure image is in RGB mode for OpenCV
+    if hasattr(image, 'mode') and image.mode != 'RGB':
+        image = image.convert('RGB')
     img_hsv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2HSV)
 
     # Define fire-like color range in HSV

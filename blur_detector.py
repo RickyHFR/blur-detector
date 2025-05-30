@@ -13,7 +13,7 @@ def extract_camera_id(src_path):
         cam_id = 'ad' + cam_id[3:]
     return cam_id
 
-def blur_detector(src_path, camera_id=None, interval_sec=1.0, threshold=10.0, ad4_threshold=1.0, output_annotation=False):
+def blur_detector(src_path, camera_id=None, interval_sec=10.0, threshold=10.0, ad4_threshold=1.0, output_annotation=False):
     """
     Determine if a media (image/video) is blurry and return a boolean value.
     """
@@ -28,8 +28,8 @@ def blur_detector(src_path, camera_id=None, interval_sec=1.0, threshold=10.0, ad
         raise ValueError("Interval must be a positive number for video mode.")
     if camera_id is None:
         camera_id = extract_camera_id(src_path)
-        if camera_id == 'ad4':
-            threshold = ad4_threshold
+    if camera_id == 'ad4':
+        threshold = ad4_threshold
     elif camera_id not in ['ad1', 'ad3', 'ad4', 'smk1', 'smk2', 'jtc1', 'jtc2', 'jtc3', 'jtc4', 'tb1', 'tb2', 'tb3', 'tb4']:
         raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: ['ad1', 'ad3', 'ad4', 'smk1', 'smk2', 'jtc1', 'jtc2', 'jtc3', 'jtc4', 'tb1', 'tb2', 'tb3', 'tb4']")
 
@@ -59,7 +59,7 @@ def blur_detector(src_path, camera_id=None, interval_sec=1.0, threshold=10.0, ad
             annotated_img, _ = label_regions(annotated_img, camera_id, region_scores, threshold)
         del frames, cropped_regions
         gc.collect()
-        return "clear" if blur_score > threshold else "blur", annotated_img if output_annotation else None
+        return "clear" if blur_score / total_region_num > threshold else "blur", annotated_img if output_annotation else None
 
     else:
         image = Image.open(src_path)

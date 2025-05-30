@@ -28,17 +28,18 @@ def evaluate_folder(src_folder_path, camera_id=None, expected_label=None, output
         exit(0)
 
     elif expected_label is None and output_folder_path is not None:
-        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        files = (f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv')))
         for file in tqdm(files, desc="Processing files"):
             file_path = os.path.join(src_folder_path, file)
             _, annotated_img = blur_detector(file_path, camera_id=camera_id, output_annotation=True)
             if annotated_img is not None:
                 annotated_img.save(os.path.join(output_folder_path, os.path.splitext(file)[0] + '_annotated.png'))
-            del annotated_img
+                annotated_img.close()  # Explicitly close PIL image
+            del annotated_img, file_path
             gc.collect()
 
     elif expected_label is not None and output_folder_path is None:
-        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        files = (f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv')))
         num_correct_labels = 0
         for file in tqdm(files, desc="Processing files"):
             file_path = os.path.join(src_folder_path, file)
@@ -47,11 +48,11 @@ def evaluate_folder(src_folder_path, camera_id=None, expected_label=None, output
                 num_correct_labels += 1
             del file_path, result
             gc.collect()
-        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(files)}")
-        print(f"Accuracy: {num_correct_labels / len(files) * 100:.2f}%")
+        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(os.listdir(src_folder_path))}")
+        print(f"Accuracy: {num_correct_labels / len(os.listdir(src_folder_path)) * 100:.2f}%")
 
     elif expected_label is not None and output_folder_path is not None:
-        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        files = (f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv')))
         num_correct_labels = 0
         for file in tqdm(files, desc="Processing files"):
             file_path = os.path.join(src_folder_path, file)
@@ -60,11 +61,11 @@ def evaluate_folder(src_folder_path, camera_id=None, expected_label=None, output
                 num_correct_labels += 1
             if annotated_img is not None:
                 annotated_img.save(os.path.join(output_folder_path, os.path.splitext(file)[0] + '_annotated.png'))
+                annotated_img.close()  # Explicitly close PIL image
             del file_path, annotated_img, result
             gc.collect()
-
-        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(files)}")
-        print(f"Accuracy: {num_correct_labels / len(files) * 100:.2f}%")
+        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(os.listdir(src_folder_path))}")
+        print(f"Accuracy: {num_correct_labels / len(os.listdir(src_folder_path)) * 100:.2f}%")
 
     else:
         raise ValueError("Invalid combination of expected_label and output_folder_path.")
