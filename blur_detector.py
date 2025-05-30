@@ -1,143 +1,80 @@
-import cv2
-from matplotlib import pyplot as plt
 import numpy as np
 from PIL import Image
-from frame_extractor import ffmpeg_extract_interval, crop_chimney_regions
+from frame_extractor import ffmpeg_extract_interval, crop_chimney_regions, label_regions
 from compute_tail_heaviness import compute_tail_heaviness
+import gc
 
-def extract_camera_id(video_path):
+def extract_camera_id(src_path):
     """
-    Extract the camera ID from the video path.
-    
-    Parameters
-    ----------
-    video_path : str
-        Path to the input video file.
-    
-    Returns
-    -------
-    str
-        The camera ID extracted from the video path.
+    Extract the camera ID from the source path (Assuming the camera ID is the first part of the filename before an underscore).
     """
-    # Assuming the camera ID is the first part of the filename before an underscore
-    cam_id = video_path.split('/')[-1].split('_')[0]
+    cam_id = src_path.split('/')[-1].split('_')[0]
     if cam_id.startswith('adm'):
         cam_id = 'ad' + cam_id[3:]
     return cam_id
 
-def blur_detector(video_path, camera_id, interval_sec=1.0, threshold=10, save_detected_dir=None):
+def blur_detector(src_path, camera_id=None, interval_sec=1.0, threshold=10.0, ad4_threshold=1.0, output_annotation=False):
     """
-    Determine if a video is blurry and return a boolean value.
-    
-    Parameters
-    ----------
-    video_path : str
-        Path to the input video file.
-    interval_sec : float
-        Seconds between each output frame.
-    camera_id : int
-        Camera ID for the video.
-    chimney_num : int
-        Chimney number to process (default is -1, meaning all chimneys).
+    Determine if a media (image/video) is blurry and return a boolean value.
     """
-    frames = ffmpeg_extract_interval(video_path, interval_sec)
-    cropped_regions = [crop_chimney_regions(frame, camera_id) for frame in frames]
-    if len(frames) == 0:
-        raise ValueError("No frames extracted from the video.")
-    if len(cropped_regions[0]) == 0:
-        raise ValueError("No cropped regions found for the given camera ID.")
-
-    count = 0
-    total = 0
-
-    for frame_idx in range(len(frames)):
-        for region in cropped_regions[frame_idx]:
-            score = compute_tail_heaviness(region, use_sobel=True)
-            # plt.imshow(region)
-            # plt.title(f'Camera ID: {camera_id} | Frame {frame_idx} | Region {count} | Tail Heaviness: {score:.2f}')
-            # plt.axis('off')
-            # plt.show()
-            total += score
-            count += 1
-    if count == 0:
-        raise ValueError("No regions to analyze for blurriness.")
-    avg_tail_heaviness = total / count
-
-    # Save the entire first frame with avg_tail_heaviness in the filename if requested
-    if save_detected_dir is not None:
-        import os
-        os.makedirs(save_detected_dir, exist_ok=True)
-        from PIL import Image
-        base_name = os.path.splitext(os.path.basename(video_path))[0]
-        out_name = f"{base_name}_score_{avg_tail_heaviness:.2f}.jpg"
-        out_path = os.path.join(save_detected_dir, out_name)
-        frame0 = frames[0]
-        if isinstance(frame0, np.ndarray):
-            img_to_save = Image.fromarray(frame0)
-        else:
-            img_to_save = frame0
-        img_to_save.save(out_path)
-
-    # plt.figure(figsize=(12, 8))  # Enlarged figure size
-    # plt.imshow(frames[0])
-    # plt.title(f'Camera ID: {camera_id} | Avg Tail Heaviness: {avg_tail_heaviness:.2f}')
-    # plt.axis('off')
-    # plt.show()
-    return avg_tail_heaviness < threshold
-
-# def internal_blur_engine(image, threshold=0.2):
-#     """
-#     Detect blurriness in an image using FFT and a threshold.
-
-#     Parameters
-#     ----------
-#     image : np.ndarray
-#         The input image to be analyzed.
-#     threshold : float
-#         The threshold for determining blurriness.
-#        Default is 0.1. 
-#     """
-#     region = np.array(image)
-#     gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
-#     f = np.fft.fft2(gray)
-#     fshift = np.fft.fftshift(f)
-#     magnitude_spectrum = np.abs(fshift)
-
-#     sorted_magnitude = np.sort(magnitude_spectrum.flatten())
-#     cutoff_index = int(len(sorted_magnitude) * 0.9)
-#     cutoff_value = sorted_magnitude[cutoff_index]
-
-#     magnitude_spectrum[magnitude_spectrum > cutoff_value] = 0
-
-#     high_freq_ratio = np.sum(magnitude_spectrum > 100) / magnitude_spectrum.size
-
-#     is_blurry = high_freq_ratio < threshold
-#     return "blur" if is_blurry else "clear"
-
-def internal_blur_engine(image):
-    """
-    Detect blurriness in an image using Gaussian Mixture Model (GMM) and a threshold.
-    Parameters
-    ----------
-    image : np.ndarray or PIL.Image.Image
-        The input image to be analyzed.
-    threshold : float
-        The threshold for determining blurriness.
-        Default is 30.
-    """
-    if isinstance(image, np.ndarray):
-        pil_image = Image.fromarray(image)
+    mode = None  # 'video' or 'image'
+    if src_path.endswith(('.mp4', '.avi', '.mov', '.mkv')):
+        mode = 'video' if mode is None else mode
+    elif src_path.endswith(('.png', '.jpg', '.jpeg')):
+        mode = 'image' if mode is None else mode
     else:
-        pil_image = image
-    
-    result = compute_tail_heaviness(pil_image, use_sobel=True)
+        raise ValueError("Unsupported file type. Please provide a video or image file.")
+    if mode == 'video' and interval_sec <= 0:
+        raise ValueError("Interval must be a positive number for video mode.")
+    if camera_id is None:
+        camera_id = extract_camera_id(src_path)
+        if camera_id == 'ad4':
+            threshold = ad4_threshold
+    elif camera_id not in ['ad1', 'ad3', 'ad4', 'smk1', 'smk2', 'jtc1', 'jtc2', 'jtc3', 'jtc4', 'tb1', 'tb2', 'tb3', 'tb4']:
+        raise ValueError(f"Invalid camera_id: {camera_id}. Valid IDs are: ['ad1', 'ad3', 'ad4', 'smk1', 'smk2', 'jtc1', 'jtc2', 'jtc3', 'jtc4', 'tb1', 'tb2', 'tb3', 'tb4']")
 
-    # # Display the original and zoomed images after computing tail heaviness
-    # plt.figure(figsize=(12, 4))
-    # plt.imshow(pil_image)
-    # plt.title(f'σ={result:.2f}')
-    # plt.axis('off')
-    # plt.tight_layout()
-    # plt.show()
+    if mode == 'video':
+        frames = ffmpeg_extract_interval(src_path, interval_sec)
+        cropped_regions = [crop_chimney_regions(frame, camera_id) for frame in frames]
+        if len(frames) == 0:
+            raise ValueError("No frames extracted from the video.")
+        if len(cropped_regions[0]) == 0:
+            raise ValueError("No cropped regions found for the given camera ID.")
+        if output_annotation:
+            annotated_img = frames[0].convert("RGB").copy()
+        blur_score = 0
+        total_region_num = 0
+        if output_annotation:
+            region_scores = []
+        for frame_idx in range(len(frames)):
+            for region in cropped_regions[frame_idx]:
+                blur_score += compute_tail_heaviness(region, detect_fire=True)
+                total_region_num += 1
+        if total_region_num == 0:
+            raise ValueError("No regions to analyze for blurriness.")
+        if output_annotation:
+            for region in cropped_regions[0]:
+                tail_heaviness = compute_tail_heaviness(region, detect_fire=True)
+                region_scores.append(tail_heaviness)
+            annotated_img, _ = label_regions(annotated_img, camera_id, region_scores, threshold)
+        del frames, cropped_regions
+        gc.collect()
+        return "clear" if blur_score > threshold else "blur", annotated_img if output_annotation else None
 
-    return result
+    else:
+        image = Image.open(src_path)
+        cropped_regions = crop_chimney_regions(image, camera_id)
+        if len(cropped_regions) == 0:
+            raise ValueError("No cropped regions found for the given camera ID.")
+        if output_annotation:
+            annotated_img = image.convert("RGB").copy()
+        region_scores = []
+        for region in cropped_regions:
+            tail_heaviness = compute_tail_heaviness(region, detect_fire=True)
+            region_scores.append(tail_heaviness)
+        blur_score = np.mean(region_scores)
+        if output_annotation:
+            annotated_img, _ = label_regions(annotated_img, camera_id, region_scores, threshold)
+        del image, cropped_regions
+        gc.collect()
+        return "clear" if blur_score > threshold else "blur", annotated_img if output_annotation else None

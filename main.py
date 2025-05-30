@@ -1,46 +1,73 @@
 import os
 import gc
-from blur_detector import blur_detector, extract_camera_id
-import sys
+from tqdm import tqdm
+from blur_detector import blur_detector
+import shutil
 
-def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
-    total = 0
-    correct = 0
-    video_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv'))]
-    n_files = len(video_files)
-    for idx, filename in enumerate(video_files):
-        video_path = os.path.join(folder_path, filename)
-        camera_id = extract_camera_id(video_path)
-        is_blur = blur_detector(video_path, camera_id, interval_sec, save_detected_dir='test_vid_in_progress/results')
-        # is_blur = blur_detector(video_path, camera_id, interval_sec)
-        pred_label = 'blur' if is_blur else 'clear'
-        if pred_label == expected_label:
-            correct += 1
-        else:
-            print(f"\nIncorrect: {filename} | Predicted: {pred_label}, Ground Truth: {expected_label}")
-            # inspect_video(video_path)
-        total += 1
-        # Progress bar
-        bar_len = 40
-        filled_len = int(round(bar_len * (idx + 1) / n_files))
-        bar = '=' * filled_len + '-' * (bar_len - filled_len)
-        sys.stdout.write(f'\r[{bar}] {idx + 1}/{n_files}')
-        sys.stdout.flush()
-        # Free memory after each video
-        del video_path, camera_id, is_blur, pred_label
-        gc.collect()
-    print()  # Newline after progress bar
-    accuracy = correct / total if total > 0 else 0
-    print(f"Accuracy for {expected_label} folder: {accuracy:.2%} ({correct}/{total})\n")
-    return accuracy
+def evaluate_folder(src_folder_path, camera_id=None, expected_label=None, output_folder_path=None):
+    """
+    Evaluate all images and videos in a folder, checking if they are blurry or clear.
+    """
+    if not os.path.exists(src_folder_path):
+        raise FileNotFoundError(f"The source folder {src_folder_path} does not exist.")
+    if expected_label not in ['blur', 'clear', None]:
+        raise ValueError("Expected label must be 'blur', 'clear', or None.")
+    if os.path.exists(output_folder_path):
+        # Clear the directory
+        for filename in os.listdir(output_folder_path):
+            file_path = os.path.join(output_folder_path, filename)
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+    else:
+        os.makedirs(output_folder_path)
+    
+    if expected_label is None and output_folder_path is None:
+        print("No expected label provided, and no output folder specified. Exiting evaluation.")
+        exit(0)
 
-if __name__ == "__main__":
-    blur_folder = 'test_vid_in_progress/blur'
-    clear_folder = 'test_vid_in_progress/clear'
-    print("Evaluating blur folder...")
-    evaluate_folder(blur_folder, 'blur')
-    print("Evaluating clear folder...")
-    evaluate_folder(clear_folder, 'clear')
+    elif expected_label is None and output_folder_path is not None:
+        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        for file in tqdm(files, desc="Processing files"):
+            file_path = os.path.join(src_folder_path, file)
+            _, annotated_img = blur_detector(file_path, camera_id=camera_id, output_annotation=True)
+            if annotated_img is not None:
+                annotated_img.save(os.path.join(output_folder_path, os.path.splitext(file)[0] + '_annotated.png'))
+            del annotated_img
+            gc.collect()
+
+    elif expected_label is not None and output_folder_path is None:
+        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        num_correct_labels = 0
+        for file in tqdm(files, desc="Processing files"):
+            file_path = os.path.join(src_folder_path, file)
+            result, _ = blur_detector(file_path, camera_id=camera_id)
+            if result == expected_label:
+                num_correct_labels += 1
+            del file_path, result
+            gc.collect()
+        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(files)}")
+        print(f"Accuracy: {num_correct_labels / len(files) * 100:.2f}%")
+
+    elif expected_label is not None and output_folder_path is not None:
+        files = [f for f in os.listdir(src_folder_path) if f.endswith(('.png', '.jpg', '.jpeg', '.mp4', '.avi', '.mov', '.mkv'))]
+        num_correct_labels = 0
+        for file in tqdm(files, desc="Processing files"):
+            file_path = os.path.join(src_folder_path, file)
+            result, annotated_img = blur_detector(file_path, camera_id=camera_id, output_annotation=True)
+            if result == expected_label:
+                num_correct_labels += 1
+            if annotated_img is not None:
+                annotated_img.save(os.path.join(output_folder_path, os.path.splitext(file)[0] + '_annotated.png'))
+            del file_path, annotated_img, result
+            gc.collect()
+
+        print(f"Number of files with expected label '{expected_label}': {num_correct_labels} out of {len(files)}")
+        print(f"Accuracy: {num_correct_labels / len(files) * 100:.2f}%")
+
+    else:
+        raise ValueError("Invalid combination of expected_label and output_folder_path.")
 
 
 

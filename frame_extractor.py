@@ -131,14 +131,9 @@ chimney_regions = {
         ]
     }
 
-# Function to extract frames from a video
 def ffmpeg_extract_interval(video_path, interval_sec=1.0):
     """
     Extract frames from a video at a fixed interval and return them as in-memory objects.
-
-    :param video_path: Path to MP4 video.
-    :param interval_sec: Seconds between each output frame.
-    :return: List of PIL.Image objects representing the frames.
     """
     container = av.open(video_path)
     stream = container.streams.video[0]
@@ -163,11 +158,7 @@ def ffmpeg_extract_interval(video_path, interval_sec=1.0):
 
 def crop_chimney_regions(image, camera_id):
     """
-    image       : PIL image
-    camera_id   : ID of the camera
-
-    Returns:
-        list of cropped patches
+    Crop the chimney regions from the image based on the camera_id.
     """
     result = []
     regions = chimney_regions.get(camera_id, [])
@@ -184,12 +175,6 @@ def crop_chimney_regions(image, camera_id):
 def label_regions(image, camera_id, scores=None, threshold=10.0):
     """
     Label the regions in the image based on the camera_id.
-
-    :param image: PIL image
-    :param camera_id: ID of the camera
-    :param scores: List of scores for each region (optional)
-    :param threshold: Threshold for prediction
-    :return: Labeled image
     """
     width, height = image.size
     regions = chimney_regions.get(camera_id, [])
