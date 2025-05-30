@@ -7,7 +7,7 @@ import gc
 
 from blur_detector import blur_detector, extract_camera_id
 from frame_extractor import crop_chimney_regions, label_regions, ffmpeg_extract_interval
-from utils.compute_tail_heaviness import compute_tail_heaviness
+from blur_fire_test import compute_tail_heaviness
 
 def eval_folder(image_folder, camera_id=None, threshold = 10.0, save_anotated_dir="anotated_images", ground_truth="blur"):
     """

@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from sklearn.mixture import GaussianMixture
 from scipy import ndimage
 import cv2
+import gc
 
 # def get_mask(image):
 #     img_hsv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2HSV)
@@ -43,78 +44,91 @@ def get_mask(image):
 
 
 def compute_tail_heaviness(image, use_sobel=True):
-    original_img = image
+    # TODO
+    # original_img = image 
+
     non_fire_mask = get_mask(image)
     display_mask = np.zeros_like(np.array(image), dtype=np.uint8)
     display_mask[non_fire_mask] = [255, 0, 0]  # Red for non-fire regions
-
-    # --- 1) Load & grayscale ---
     if isinstance(image, str):
         img = np.array(Image.open(image).convert('L'), dtype=float)
     else:
-        img = np.array(image.convert('L'), dtype=float)
+        img = np.array(image.convert('L'), dtype=np.float32)
 
-    grayscale_img = img.copy()  # Keep a copy of the grayscale image for display
+    # TODO
+    # grayscale_img = img.copy()  # Keep a copy of the grayscale image for display
 
-    # --- 2) Compute gradients ---
     if use_sobel:
         Gx = ndimage.sobel(img, axis=1)
         Gy = ndimage.sobel(img, axis=0)
     else:
         Gy, Gx = np.gradient(img)
 
-    # --- 3) Gradient magnitude and flatten ---
     G = np.sqrt(Gx**2 + Gy**2).reshape(-1, 1)
 
-    # convert the gradient to image for display
-    gradient_magnitude_img = np.clip(G.reshape(img.shape), 0, 255).astype(np.uint8)
+    # TODO
+    # # convert the gradient to image for display
+    # gradient_magnitude_img = np.clip(G.reshape(img.shape), 0, 255).astype(np.uint8)
 
-    # grad_thresh = np.percentile(G, 98)
-    # G = np.where(G < grad_thresh, G, 0)
+    grad_thresh = np.percentile(G, 98)
+    G = np.where(G < grad_thresh, G, 0)
     # gradient_magnitude_masked = G
     # new_gradient_magnitude_img = np.clip(gradient_magnitude_masked.reshape(img.shape), 0, 255).astype(np.uint8)
 
-    # --- 4) Fit 2-component GMM to gradient magnitudes ---
     G_masked = G[non_fire_mask.flatten()]
 
-    # For visualization: create an image with masked values at non-fire locations
-    new_gradient_magnitude_img = np.zeros_like(img)
-    new_gradient_magnitude_img[non_fire_mask] = np.clip(G.flatten()[non_fire_mask.flatten()], 0, 255)
-    new_gradient_magnitude_img = new_gradient_magnitude_img.astype(np.uint8)
+    # TODO
+    # # For visualization: create an image with masked values at non-fire locations
+    # new_gradient_magnitude_img = np.zeros_like(img)
+    # new_gradient_magnitude_img[non_fire_mask] = np.clip(G.flatten()[non_fire_mask.flatten()], 0, 255)
+    # new_gradient_magnitude_img = new_gradient_magnitude_img.astype(np.uint8)
 
-    gmm = GaussianMixture(n_components=2, covariance_type='diag', random_state=0)
-    gmm.fit(G_masked)
+    if G_masked.shape[0] < 2:
+        print("Warning: Not enough non-fire pixels for GMM. Returning 0.")
+        sigma1 = 0.0
+    else:
+        gmm = GaussianMixture(n_components=2, covariance_type='diag', random_state=0)
+        gmm.fit(G_masked)
+        # --- 5) Extract standard deviations and pick the larger ---
+        sigmas = np.sqrt(gmm.covariances_.flatten())
+        sigma1 = max(sigmas)
+    
+    # TODO
+    # gmm1 = GaussianMixture(n_components=2, covariance_type='diag', random_state=0)
+    # gmm1.fit(G)
+    # sigmas_pre = np.sqrt(gmm1.covariances_.flatten())
+    # sigma1_pre = max(sigmas_pre)
 
-    # --- 5) Extract standard deviations and pick the larger ---
-    # gmm.covariances_ is shape (2, 1) for diag covariances
-    sigmas = np.sqrt(gmm.covariances_.flatten())
-    sigma1 = max(sigmas)
+    # TODO
+    # # Display the original, grayscale, and gradient magnitude images
+    # plt.figure(figsize=(12, 4))
+    # plt.subplot(1, 5, 1)
+    # plt.imshow(original_img)
+    # plt.title('Original Image')
+    # plt.axis('off')
+    # plt.subplot(1, 5, 2)
+    # plt.imshow(grayscale_img, cmap='gray')
+    # plt.title('Grayscale Image')
+    # plt.axis('off')
+    # plt.subplot(1, 5, 3)
+    # plt.imshow(gradient_magnitude_img, cmap='gray')
+    # plt.title('Gradient Magnitude')
+    # plt.axis('off')
+    # plt.subplot(1, 5, 4)
+    # plt.imshow(new_gradient_magnitude_img, cmap='gray')
+    # plt.title('Masked Gradient Magnitude')
+    # plt.axis('off')
+    # plt.subplot(1, 5, 5)
+    # plt.imshow(display_mask)
+    # plt.title('Non-Fire Mask')
+    # plt.axis('off')
+    # plt.tight_layout(rect=[0, 0.08, 1, 1])  # Leave space at the bottom
+    # plt.figtext(0.5, 0.01, f"pre_sigma1: {sigma1_pre:.4f} | after_sigma1: {sigma1:.4f}", ha='center', fontsize=14, color='blue')
+    # plt.show()
 
-    # Display the original, grayscale, and gradient magnitude images
-    plt.figure(figsize=(12, 4))
-    plt.subplot(1, 5, 1)
-    plt.imshow(original_img)
-    plt.title('Original Image')
-    plt.axis('off')
-    plt.subplot(1, 5, 2)
-    plt.imshow(grayscale_img, cmap='gray')
-    plt.title('Grayscale Image')
-    plt.axis('off')
-    plt.subplot(1, 5, 3)
-    plt.imshow(gradient_magnitude_img, cmap='gray')
-    plt.title('Gradient Magnitude')
-    plt.axis('off')
-    plt.subplot(1, 5, 4)
-    plt.imshow(new_gradient_magnitude_img, cmap='gray')
-    plt.title('Masked Gradient Magnitude')
-    plt.axis('off')
-    plt.subplot(1, 5, 5)
-    plt.imshow(display_mask)
-    plt.title('Non-Fire Mask')
-    plt.axis('off')
-    plt.tight_layout(rect=[0, 0.08, 1, 1])  # Leave space at the bottom
-    plt.figtext(0.5, 0.01, f"sigma1: {sigma1:.4f}", ha='center', fontsize=14, color='blue')
-    plt.show()
+    # At the end, free memory (make sure to use the correct variable name)
+    del img, G, Gx, Gy, G_masked, non_fire_mask  # use non_fire_mask, not mask_non_fire
+    gc.collect()
 
     return sigma1
 
