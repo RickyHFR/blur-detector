@@ -2,6 +2,9 @@ import os
 from PIL import Image
 
 def convert_webp_to_png(source_folder, target_folder):
+    """
+    Convert all .webp images in the source folder to .png format and save them in the target folder.
+    """
     os.makedirs(target_folder, exist_ok=True)
     for filename in os.listdir(source_folder):
         if filename.lower().endswith('.webp'):

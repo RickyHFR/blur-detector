@@ -3,10 +3,7 @@ import os
 
 def extract_segment(input_path, start_time, duration_sec, output_path):
     """
-    - input_path: path to your long video
-    - start_time: string “MM:SS” or “HH:MM:SS” (e.g. “12:34” for 12m34s in)
-    - duration_sec: how many seconds to extract
-    - output_path: where to save the clip
+    Extract a segment from a video file using ffmpeg.
     """
     (
         ffmpeg
