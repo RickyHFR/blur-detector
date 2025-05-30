@@ -1,9 +1,9 @@
 import os
 import gc
 from blur_detector import blur_detector, extract_camera_id
+import sys
 
 def evaluate_folder(folder_path, expected_label, interval_sec=10.0):
-    import sys
     total = 0
     correct = 0
     video_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv'))]

@@ -82,14 +82,17 @@ def eval_folder(image_folder, camera_id=None, threshold = 10.0, save_anotated_di
             del image, cropped_regions, annotated_img, region_scores
             gc.collect()
 
-    print(f"Accuracy for {image_folder}: {num_correct_labels}/{count} ({(num_correct_labels / count) * 100:.2f}%)")
+    if count == 0:
+        print(f"No images or videos processed in {image_folder}.")
+    else:
+        print(f"Accuracy for {image_folder}: {num_correct_labels}/{count} ({(num_correct_labels / count) * 100:.2f}%)")
 
     
 if __name__ == "__main__":
-    folder = "test_vid_in_progress/enlarged_images/blur_with_flare/png_form/tb4_png"
+    folder = "test_vid_in_progress/enlarged_images/clear_ad4_png"
     target_folder = folder + "/annotated"
     if not os.path.exists(folder):
         print(f"Folder {folder} does not exist.")
         exit(1)
-    eval_folder(folder, camera_id='tb4', threshold=10.0, save_anotated_dir=target_folder, ground_truth="blur")
+    eval_folder(folder, camera_id='ad4', threshold=1.0, save_anotated_dir=target_folder, ground_truth="clear")
 
